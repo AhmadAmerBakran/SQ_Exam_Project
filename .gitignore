@@ -3,15 +3,6 @@ obj/
 [Bb]in/
 [Oo]bj/
 
-TestResults/
-coverage/
-coverage-report/
-*.trx
-*.coverage
-*.coveragexml
-
-StrykerOutput/
-.stryker-cache/
 
 .idea/
 *.sln.iml

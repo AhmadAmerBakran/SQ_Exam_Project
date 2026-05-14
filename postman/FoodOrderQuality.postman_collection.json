@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "FoodOrderQuality API Tests",
+    "description": "Postman collection for FoodOrderQuality API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" }
+  ],
+  "item": [
+    {
+      "name": "Health check returns 200",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('API status is ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Valid order returns calculated total",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/orders/quote",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"menuItemId\": \"menu-1\", \"name\": \"Chicken Durum\", \"unitPrice\": 150, \"quantity\": 1 }\n  ],\n  \"deliveryDistanceKm\": 4,\n  \"requestedDeliveryTime\": \"2026-05-18T18:00:00+00:00\",\n  \"discountCode\": null,\n  \"customerId\": \"customer-1\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Order is accepted', () => pm.expect(body.accepted).to.eql(true));",
+              "pm.test('Delivery fee is 39', () => pm.expect(body.deliveryFee).to.eql(39));",
+              "pm.test('Total is 189', () => pm.expect(body.total).to.eql(189));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Distance above 10 km returns 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/orders/quote",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"menuItemId\": \"menu-1\", \"name\": \"Chicken Durum\", \"unitPrice\": 150, \"quantity\": 1 }\n  ],\n  \"deliveryDistanceKm\": 10.01,\n  \"requestedDeliveryTime\": \"2026-05-18T18:00:00+00:00\",\n  \"discountCode\": null,\n  \"customerId\": \"customer-1\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('Order is rejected', () => pm.expect(body.accepted).to.eql(false));",
+              "pm.test('Error contains DISTANCE_TOO_FAR', () => pm.expect(body.errors).to.include('DISTANCE_TOO_FAR'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Free shipping discount returns delivery fee 0",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/orders/quote",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"menuItemId\": \"menu-1\", \"name\": \"Family Menu\", \"unitPrice\": 220, \"quantity\": 1 }\n  ],\n  \"deliveryDistanceKm\": 4,\n  \"requestedDeliveryTime\": \"2026-05-18T18:00:00+00:00\",\n  \"discountCode\": \"FREESHIP\",\n  \"customerId\": \"customer-1\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Delivery fee is 0', () => pm.expect(body.deliveryFee).to.eql(0));",
+              "pm.test('Applied code is FREESHIP', () => pm.expect(body.appliedDiscountCode).to.eql('FREESHIP'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
