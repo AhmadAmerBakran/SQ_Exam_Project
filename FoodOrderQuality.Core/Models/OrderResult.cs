@@ -1,4 +1,4 @@
-﻿namespace FoodOrderQuality.Api.Models;
+﻿namespace FoodOrderQuality.Core.Models;
 
 public sealed record OrderResult(
     
